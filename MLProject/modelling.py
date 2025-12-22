@@ -13,25 +13,25 @@ y_test = pd.read_csv("WineQT_preprocessing/y_test.csv").values.ravel()
 mlflow.set_tracking_uri("file:mlruns")
 mlflow.set_experiment("Eksperimen Latih Model Dataset WineQT")
 
-#Autolog
-mlflow.sklearn.autolog()
+with mlflow.start_run() as run:
+    #Autolog
+    mlflow.sklearn.autolog()
 
-#Training Model
-model = RandomForestClassifier(
-    n_estimators=100,
-    random_state=42
-)
+    #Training Model
+    model = RandomForestClassifier(
+        n_estimators=100,
+        random_state=42
+    )
+        
+    model.fit(X_train, y_train)
     
-model.fit(X_train, y_train)
+    #Evaluasi
+    y_pred = model.predict(X_test)
+    accuracy = accuracy_score(y_test, y_pred)
+    
+    print("Accuracy:", accuracy)
+    print(classification_report(y_test, y_pred))
 
-#Evaluasi
-y_pred = model.predict(X_test)
-accuracy = accuracy_score(y_test, y_pred)
+    mlflow.sklearn.log_model(model, "model")
 
-print("Accuracy:", accuracy)
-print(classification_report(y_test, y_pred))
-
-
-
-
-
+    print(f"MLFLOW_RUN_ID={run.info.run_id}")
