@@ -4,13 +4,10 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score, classification_report
 
 #Load Data
-X_train = pd.read_csv("Github/data/processed/X_train.csv")
-X_test = pd.read_csv("Github/data/processed/X_test.csv")
-y_train = pd.read_csv("Github/data/processed/y_train.csv").values.ravel()
-y_test = pd.read_csv("Github/data/processed/y_test.csv").values.ravel()
-
-#Set Tracking UI
-mlflow.set_tracking_uri("http://127.0.0.1:5000/")
+X_train = pd.read_csv("WineQT_preprocessing/X_train.csv")
+X_test = pd.read_csv("WineQT_preprocessing/X_test.csv")
+y_train = pd.read_csv("WineQT_preprocessing/y_train.csv").values.ravel()
+y_test = pd.read_csv("WineQT_preprocessing/y_test.csv").values.ravel()
 
 #Set Eksperimen
 mlflow.set_experiment("Eksperimen Latih Model Dataset WineQT")
