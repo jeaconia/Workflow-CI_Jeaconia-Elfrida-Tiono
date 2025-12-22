@@ -16,17 +16,17 @@ mlflow.set_experiment("Eksperimen Latih Model Dataset WineQT")
 mlflow.sklearn.autolog()
 
 #Training Model
-with mlflow.start_run():
-    model = RandomForestClassifier(
-        n_estimators=100,
-        random_state=42
-    )
+model = RandomForestClassifier(
+    n_estimators=100,
+    random_state=42
+)
     
-    model.fit(X_train, y_train)
+model.fit(X_train, y_train)
 
 #Evaluasi
-    y_pred = model.predict(X_test)
-    accuracy = accuracy_score(y_test, y_pred)
+y_pred = model.predict(X_test)
+accuracy = accuracy_score(y_test, y_pred)
 
-    print("Accuracy:", accuracy)
-    print(classification_report(y_test, y_pred))
+print("Accuracy:", accuracy)
+print(classification_report(y_test, y_pred))
+
