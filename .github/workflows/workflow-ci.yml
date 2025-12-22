@@ -21,21 +21,9 @@ jobs:
     - name: Install MLflow
       run: pip install mlflow
 
-    - name: Debug working directory
-      working-directory: MLProject
-      run: |
-        pwd
-        ls -R
-
     - name: Run MLflow Project
       working-directory: MLProject
       run: python modelling.py
-
-    - name: Check MLruns folder
-      working-directory: MLProject
-      run: |
-        echo "Contents of MLProject/mlruns:"
-        ls -R mlruns || echo "mlruns folder not found"
       
     - name: Upload MLflow Artifacts
       uses: actions/upload-artifact@v4
@@ -43,12 +31,25 @@ jobs:
         name: mlflow-artifacts
         path: MLProject/mlruns
 
-    - name: List mlruns folder
-      working-directory: MLProject
-      run: ls -R mlruns
-
-    - name: Login Docker Hub
+    - name: Docker Login
+      uses: docker/login-action@v2
+      with:
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
+    
+    - name: Build Docker Image from MLflow model
+      shell: bash
       run: |
-        echo "${{ secrets.DOCKER_PASSWORD }}" | \
-        docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
-
+        cd MLProject
+        # Ambil run_id terakhir jika perlu otomatis
+        RUN_ID="749601595699638139"
+        MODEL_PATH="mlruns/$RUN_ID/models/m-3ef6d2b0188d4441b7ca5e0e3d8c73f8"
+        mlflow models build-docker -m "$MODEL_PATH" -n bbc-mlflow
+    
+    - name: Tag Docker Image
+      run: |
+        docker tag bbc-mlflow:latest ${{ secrets.DOCKER_USERNAME }}/bbc-mlflow:latest
+    
+    - name: Push Docker Image
+      run: |
+        docker push ${{ secrets.DOCKER_USERNAME }}/bbc-mlflow:latest
