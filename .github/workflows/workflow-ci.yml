@@ -46,12 +46,12 @@ jobs:
       run: |
         cd MLProject
         echo "Building from run_id=$RUN_ID"
-        mlflow models build-docker -m "runs:/$RUN_ID/model" -n bbc-mlflow
+        mlflow models build-docker -m "runs:/$RUN_ID/model" -n mlflow-model
 
     - name: Tag Docker Image
       run: |
-        docker tag bbc-mlflow:latest ${{ secrets.DOCKER_USERNAME }}/bbc-mlflow:latest
+        docker tag mlflow-model:latest ${{ secrets.DOCKER_USERNAME }}/mlflow-model:latest
 
     - name: Push Docker Image
       run: |
-        docker push ${{ secrets.DOCKER_USERNAME }}/bbc-mlflow:latest
+        docker push ${{ secrets.DOCKER_USERNAME }}/mlflow-model:latest
