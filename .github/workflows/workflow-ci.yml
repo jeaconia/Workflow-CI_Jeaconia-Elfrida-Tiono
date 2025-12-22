@@ -41,9 +41,10 @@ jobs:
       shell: bash
       run: |
         cd MLProject
-        # Ambil run_id terakhir jika perlu otomatis
         RUN_ID="749601595699638139"
-        MODEL_PATH="mlruns/$RUN_ID/models/m-3ef6d2b0188d4441b7ca5e0e3d8c73f8/artifacts"
+        MODEL_DIR=$(ls -1 mlruns/$RUN_ID/models/ | tail -n 1)
+        MODEL_PATH="mlruns/$RUN_ID/models/$MODEL_DIR/artifacts"
+        echo "Using model path: $MODEL_PATH"
         mlflow models build-docker -m "$MODEL_PATH" -n bbc-mlflow
     
     - name: Tag Docker Image
