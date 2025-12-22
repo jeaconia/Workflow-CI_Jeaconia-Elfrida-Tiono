@@ -10,26 +10,20 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
+    - uses: actions/checkout@v4
 
-    - name: Set up Python
-      uses: actions/setup-python@v5
+    - uses: actions/setup-python@v5
       with:
         python-version: "3.10"
 
-    - name: Install MLflow
-      run: pip install mlflow
+    - name: Install dependencies
+      run: pip install mlflow scikit-learn pandas
 
-    - name: Run MLflow Project
+    - name: Run MLflow training
       working-directory: MLProject
-      run: python modelling.py
-      
-    - name: Upload MLflow Artifacts
-      uses: actions/upload-artifact@v4
-      with:
-        name: mlflow-artifacts
-        path: MLProject/mlruns
+      run: |
+        RUN_ID=$(python modelling.py | grep MLFLOW_RUN_ID | cut -d= -f2)
+        echo "RUN_ID=$RUN_ID" >> $GITHUB_ENV
 
     - name: Docker Login
       uses: docker/login-action@v2
@@ -37,40 +31,17 @@ jobs:
         username: ${{ secrets.DOCKER_USERNAME }}
         password: ${{ secrets.DOCKER_PASSWORD }}
 
-    - name: Debug mlruns
+    - name: Build Docker image from MLflow model
       run: |
         cd MLProject
-        find mlruns -maxdepth 4 -type d
-
-    - name: Resolve MLflow model path
-      run: |
-        cd MLProject
-        EXP_ID=$(ls mlruns | grep -vE '0|.trash')
-        MODEL_ID=$(ls mlruns/$EXP_ID/models | tail -n 1)
-        MODEL_PATH="mlruns/$EXP_ID/models/$MODEL_ID/artifacts"
-    
-        echo "MODEL_PATH=$MODEL_PATH"
-        echo "MODEL_PATH=$MODEL_PATH" >> $GITHUB_ENV
-
-    - name: Build Docker Image from MLflow model
-      run: |
-        cd MLProject
+        MODEL_PATH="mlruns/0/$RUN_ID/artifacts/model"
+        ls -la "$MODEL_PATH"
         mlflow models build-docker -m "$MODEL_PATH" -n bbc-mlflow
-    
-    - name: Build Docker Image from MLflow model
-      shell: bash
-      run: |
-        cd MLProject
-        RUN_ID="749601595699638139"
-        MODEL_DIR=$(ls -1 mlruns/$RUN_ID/models/ | tail -n 1)
-        MODEL_PATH="mlruns/$RUN_ID/models/$MODEL_DIR/artifacts"
-        echo "Using model path: $MODEL_PATH"
-        mlflow models build-docker -m "$MODEL_PATH" -n bbc-mlflow
-    
+
     - name: Tag Docker Image
       run: |
         docker tag bbc-mlflow:latest ${{ secrets.DOCKER_USERNAME }}/bbc-mlflow:latest
-    
+
     - name: Push Docker Image
       run: |
         docker push ${{ secrets.DOCKER_USERNAME }}/bbc-mlflow:latest
