@@ -1,4 +1,5 @@
 import mlflow
+import mlflow.sklearn
 import pandas as pd
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score, classification_report
@@ -36,5 +37,6 @@ with mlflow.start_run() as run:
 
     print(f"MLFLOW_ARTIFACT_URI={run.info.artifact_uri}")
     print(f"MLFLOW_RUN_ID={run.info.run_id}")
+
 
 
