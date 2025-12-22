@@ -43,7 +43,7 @@ jobs:
         cd MLProject
         # Ambil run_id terakhir jika perlu otomatis
         RUN_ID="749601595699638139"
-        MODEL_PATH="mlruns/$RUN_ID/models/m-3ef6d2b0188d4441b7ca5e0e3d8c73f8"
+        MODEL_PATH="mlruns/$RUN_ID/models/m-3ef6d2b0188d4441b7ca5e0e3d8c73f8/artifacts"
         mlflow models build-docker -m "$MODEL_PATH" -n bbc-mlflow
     
     - name: Tag Docker Image
