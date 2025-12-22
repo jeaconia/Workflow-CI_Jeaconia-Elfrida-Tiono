@@ -41,6 +41,21 @@ jobs:
       run: |
         cd MLProject
         find mlruns -maxdepth 4 -type d
+
+    - name: Resolve MLflow model path
+      run: |
+        cd MLProject
+        EXP_ID=$(ls mlruns | grep -vE '0|.trash')
+        MODEL_ID=$(ls mlruns/$EXP_ID/models | tail -n 1)
+        MODEL_PATH="mlruns/$EXP_ID/models/$MODEL_ID/artifacts"
+    
+        echo "MODEL_PATH=$MODEL_PATH"
+        echo "MODEL_PATH=$MODEL_PATH" >> $GITHUB_ENV
+
+    - name: Build Docker Image from MLflow model
+      run: |
+        cd MLProject
+        mlflow models build-docker -m "$MODEL_PATH" -n bbc-mlflow
     
     - name: Build Docker Image from MLflow model
       shell: bash
