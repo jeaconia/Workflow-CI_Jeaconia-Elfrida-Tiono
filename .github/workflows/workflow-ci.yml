@@ -31,11 +31,12 @@ jobs:
         path: mlruns
 
     - name: Login Docker Hub
-      run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login \
-           -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
+      run: |
+        echo "${{ secrets.DOCKER_PASSWORD }}" | \
+        docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
 
     - name: Build Docker Image with MLflow
-      shell: bash -l {0}
+      shell: bash
       run: |
         EXP_ID=$(ls mlruns | head -n 1)
         RUN_ID=$(ls mlruns/$EXP_ID | head -n 1)
