@@ -31,6 +31,12 @@ jobs:
       working-directory: MLProject
       run: mlflow run . --env-manager=local
 
+    - name: Check MLruns folder
+      working-directory: MLProject
+      run: |
+        echo "Contents of MLProject/mlruns:"
+        ls -R mlruns || echo "mlruns folder not found"
+      
     - name: Upload MLflow Artifacts
       uses: actions/upload-artifact@v4
       with:
