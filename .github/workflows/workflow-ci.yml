@@ -31,6 +31,11 @@ jobs:
         echo "RUN_ID=$RUN_ID" >> $GITHUB_ENV
         echo "ARTIFACT_URI=$ARTIFACT_URI" >> $GITHUB_ENV
 
+    - name: Debug artifacts
+      run: |
+        cd MLProject
+        find mlruns -maxdepth 5 -type d
+
     - name: Docker Login
       uses: docker/login-action@v2
       with:
@@ -40,12 +45,8 @@ jobs:
     - name: Build Docker image from MLflow model
       run: |
         cd MLProject
-        
-        ARTIFACT_PATH=${ARTIFACT_URI#file://}
-        MODEL_PATH="$ARTIFACT_PATH/model"
-    
-        ls -la "$MODEL_PATH"
-        mlflow models build-docker -m "$MODEL_PATH" -n bbc-mlflow
+        echo "Building from run_id=$RUN_ID"
+        mlflow models build-docker -m "runs:/$RUN_ID/model" -n bbc-mlflow
 
     - name: Tag Docker Image
       run: |
