@@ -38,10 +38,10 @@ jobs:
     - name: Build Docker Image with MLflow
       shell: bash
       run: |
-        EXP_ID=$(ls mlruns | head -n 1)
-        RUN_ID=$(ls mlruns/$EXP_ID | head -n 1)
+        # ambil run_id terakhir
+        RUN_ID=$(ls -d mlruns/*/* | sort | tail -n 1)
     
         mlflow models build-docker \
-          -m "runs:/$EXP_ID/$RUN_ID/model" \
+          -m "runs:/$RUN_ID/model" \
           -n ${{ secrets.DOCKER_USERNAME }}/mlflow-model
 
