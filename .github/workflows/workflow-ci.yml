@@ -21,6 +21,12 @@ jobs:
     - name: Install MLflow
       run: pip install mlflow
 
+    - name: Debug working directory
+      working-directory: MLProject
+      run: |
+        pwd
+        ls -R
+
     - name: Run MLflow Project
       working-directory: MLProject
       run: mlflow run . --env-manager=local
