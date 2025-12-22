@@ -23,7 +23,7 @@ jobs:
 
     - name: Run MLflow Project
       working-directory: MLProject
-      run: mlflow run MLProject --env-manager=local
+      run: mlflow run . --env-manager=local
 
     - name: Upload MLflow Artifacts
       uses: actions/upload-artifact@v4
