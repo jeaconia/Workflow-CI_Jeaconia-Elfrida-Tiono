@@ -34,5 +34,7 @@ with mlflow.start_run() as run:
 
     mlflow.sklearn.log_model(model, "model")
 
+    print(f"MLFLOW_ARTIFACT_URI={run.info.artifact_uri}")
     print(f"MLFLOW_RUN_ID={run.info.run_id}")
+
 
