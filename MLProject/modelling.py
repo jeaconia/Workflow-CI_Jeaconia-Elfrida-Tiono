@@ -15,7 +15,7 @@ mlflow.set_experiment("Eksperimen Latih Model Dataset WineQT")
 
 with mlflow.start_run() as run:
     #Autolog
-    mlflow.sklearn.autolog()
+    mlflow.sklearn.autolog(log_models=False)
 
     #Training Model
     model = RandomForestClassifier(
@@ -35,3 +35,4 @@ with mlflow.start_run() as run:
     mlflow.sklearn.log_model(model, "model")
 
     print(f"MLFLOW_RUN_ID={run.info.run_id}")
+
