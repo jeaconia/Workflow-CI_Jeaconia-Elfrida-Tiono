@@ -38,7 +38,12 @@ jobs:
            -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
 
     - name: Build Docker Image with MLflow
+      shell: bash -l {0}
       run: |
+        EXP_ID=$(ls mlruns | head -n 1)
+        RUN_ID=$(ls mlruns/$EXP_ID | head -n 1)
+    
         mlflow models build-docker \
-        -m "runs:/$(ls mlruns/0 | head -n 1)/model" \
-        -n ${{ secrets.DOCKER_USERNAME }}/mlflow-model
+          -m "runs:/$EXP_ID/$RUN_ID/model" \
+          -n ${{ secrets.DOCKER_USERNAME }}/mlflow-model
+
