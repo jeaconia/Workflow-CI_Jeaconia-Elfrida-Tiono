@@ -4,10 +4,10 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score, classification_report
 
 #Load Data
-X_train = pd.read_csv("WineQT_preprocessing/X_train.csv")
-X_test = pd.read_csv("WineQT_preprocessing/X_test.csv")
-y_train = pd.read_csv("WineQT_preprocessing/y_train.csv").values.ravel()
-y_test = pd.read_csv("WineQT_preprocessing/y_test.csv").values.ravel()
+X_train = pd.read_csv("MLProject/WineQT_preprocessing/X_train.csv")
+X_test = pd.read_csv("MLProject/WineQT_preprocessing/X_test.csv")
+y_train = pd.read_csv("MLProject/WineQT_preprocessing/y_train.csv").values.ravel()
+y_test = pd.read_csv("MLProject/WineQT_preprocessing/y_test.csv").values.ravel()
 
 #Set Eksperimen
 mlflow.set_experiment("Eksperimen Latih Model Dataset WineQT")
@@ -29,4 +29,5 @@ accuracy = accuracy_score(y_test, y_pred)
 
 print("Accuracy:", accuracy)
 print(classification_report(y_test, y_pred))
+
 
