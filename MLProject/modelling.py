@@ -10,6 +10,7 @@ y_train = pd.read_csv("WineQT_preprocessing/y_train.csv").values.ravel()
 y_test = pd.read_csv("WineQT_preprocessing/y_test.csv").values.ravel()
 
 #Set Eksperimen
+mlflow.set_tracking_uri("file:mlruns")
 mlflow.set_experiment("Eksperimen Latih Model Dataset WineQT")
 
 #Autolog
@@ -29,6 +30,7 @@ accuracy = accuracy_score(y_test, y_pred)
 
 print("Accuracy:", accuracy)
 print(classification_report(y_test, y_pred))
+
 
 
 
