@@ -22,8 +22,14 @@ jobs:
     - name: Run MLflow training
       working-directory: MLProject
       run: |
-        RUN_ID=$(python modelling.py | grep MLFLOW_RUN_ID | cut -d= -f2)
+        OUTPUT=$(python modelling.py)
+        echo "$OUTPUT"
+    
+        RUN_ID=$(echo "$OUTPUT" | grep MLFLOW_RUN_ID | cut -d= -f2)
+        ARTIFACT_URI=$(echo "$OUTPUT" | grep MLFLOW_ARTIFACT_URI | cut -d= -f2)
+    
         echo "RUN_ID=$RUN_ID" >> $GITHUB_ENV
+        echo "ARTIFACT_URI=$ARTIFACT_URI" >> $GITHUB_ENV
 
     - name: Docker Login
       uses: docker/login-action@v2
@@ -34,7 +40,10 @@ jobs:
     - name: Build Docker image from MLflow model
       run: |
         cd MLProject
-        MODEL_PATH="mlruns/0/$RUN_ID/artifacts/model"
+        
+        ARTIFACT_PATH=${ARTIFACT_URI#file://}
+        MODEL_PATH="$ARTIFACT_PATH/model"
+    
         ls -la "$MODEL_PATH"
         mlflow models build-docker -m "$MODEL_PATH" -n bbc-mlflow
 
