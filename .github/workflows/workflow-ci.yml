@@ -26,12 +26,21 @@ jobs:
     
     - name: Get latest MLflow run
       working-directory: MLProject
+      env:
+        MLFLOW_TRACKING_URI: file:mlruns
       run: |
+        mlflow runs list --experiment-name "Eksperimen Latih Model Dataset Abalone"
+    
         RUN_ID=$(mlflow runs list \
           --experiment-name "Eksperimen Latih Model Dataset Abalone" \
           --order-by start_time DESC \
           --max-results 1 \
           | tail -n 1 | awk '{print $1}')
+    
+        if [ -z "$RUN_ID" ]; then
+          echo "ERROR: RUN_ID is empty"
+          exit 1
+        fi
     
         ARTIFACT_URI=$(mlflow runs describe -r $RUN_ID \
           | grep Artifact | awk '{print $3}')
@@ -51,9 +60,11 @@ jobs:
         password: ${{ secrets.DOCKER_PASSWORD }}
 
     - name: Build Docker image from MLflow model
+      working-directory: MLProject
+      env:
+        MLFLOW_TRACKING_URI: file:mlruns
       run: |
-        cd MLProject
-        echo "Building from run_id=$RUN_ID"
+        echo "Using RUN_ID=$RUN_ID"
         mlflow models build-docker -m "runs:/$RUN_ID/model" -n mlflow-model
 
     - name: Tag Docker Image
