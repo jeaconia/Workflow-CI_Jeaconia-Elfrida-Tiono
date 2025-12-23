@@ -16,15 +16,15 @@ jobs:
       with:
         python-version: "3.10"
 
-    - name: Install dependencies
-      run: pip install mlflow scikit-learn pandas
+    - name: Install MLflow
+      run: pip install mlflow
 
-    - name: Run MLflow training
+    - name: Run MLflow Project (Retrain)
       working-directory: MLProject
       env:
         MLFLOW_TRACKING_URI: file:mlruns
       run: |
-        python modelling.py | tee output.log
+        mlflow run . | tee output.log
 
     - name: Get latest RUN_ID
       working-directory: MLProject
@@ -39,10 +39,11 @@ jobs:
         echo "RUN_ID=$RUN_ID" >> $GITHUB_ENV
         echo "Detected RUN_ID=$RUN_ID"
 
-    - name: Debug artifacts
-      run: |
-        cd MLProject
-        find mlruns -maxdepth 5 -type d
+    - name: Upload MLflow artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: mlflow-artifacts
+        path: MLProject/mlruns
 
     - name: Docker Login
       uses: docker/login-action@v2
@@ -50,21 +51,19 @@ jobs:
         username: ${{ secrets.DOCKER_USERNAME }}
         password: ${{ secrets.DOCKER_PASSWORD }}
 
-    - name: Build Docker image from MLflow model
+    - name: Build Docker Image from MLflow Model
       working-directory: MLProject
       env:
         MLFLOW_TRACKING_URI: file:mlruns
       run: |
-        echo "Using RUN_ID=$RUN_ID"
         mlflow models build-docker \
           -m "runs:/$RUN_ID/model" \
           -n mlflow-model
 
-    - name: Tag Docker Image
+    - name: Tag & Push Docker Image
       run: |
         docker tag mlflow-model:latest \
           ${{ secrets.DOCKER_USERNAME }}/mlflow-model:latest
-
-    - name: Push Docker Image
-      run: |
         docker push ${{ secrets.DOCKER_USERNAME }}/mlflow-model:latest
+
+        
