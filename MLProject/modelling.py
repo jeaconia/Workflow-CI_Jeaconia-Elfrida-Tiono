@@ -15,9 +15,6 @@ mlflow.set_tracking_uri("file:mlruns")
 mlflow.set_experiment("Eksperimen Latih Model Dataset WineQT")
 
 with mlflow.start_run() as run:
-    #Autolog
-    mlflow.sklearn.autolog(log_models=False)
-
     #Training Model
     model = RandomForestClassifier(
         n_estimators=100,
@@ -33,10 +30,10 @@ with mlflow.start_run() as run:
     print("Accuracy:", accuracy)
     print(classification_report(y_test, y_pred))
 
-    mlflow.sklearn.log_model(model, "model")
+    mlflow.sklearn.log_model(model, artifact_path="model")
 
-    print(f"MLFLOW_ARTIFACT_URI={run.info.artifact_uri}")
     print(f"MLFLOW_RUN_ID={run.info.run_id}")
+
 
 
 
