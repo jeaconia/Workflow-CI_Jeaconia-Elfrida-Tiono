@@ -12,8 +12,8 @@ DATA_DIR = "Abalone_preprocessing"
 def main():
     mlflow.autolog()
 
-    with mlflow.start_run() as run:
-        print(f"MLFLOW_RUN_ID={run.info.run_id}")
+    run = mlflow.active_run()
+    print(f"MLFLOW_RUN_ID={run.info.run_id}")
 
         # Load data
         X_train = pd.read_csv(f"{DATA_DIR}/X_train.csv")
@@ -41,3 +41,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
