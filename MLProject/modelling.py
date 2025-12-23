@@ -29,12 +29,13 @@ def main():
 
         model.fit(X_train, y_train)
 
-        # Evaluation
+        mlflow.sklearn.log_model(
+            sk_model=model,
+            artifact_path="model"
+        )
+
         y_pred = model.predict(X_test)
         accuracy = accuracy_score(y_test, y_pred)
-
-        print("Accuracy:", accuracy)
-        print(classification_report(y_test, y_pred))
 
         mlflow.log_metric("accuracy_manual", accuracy)
 
