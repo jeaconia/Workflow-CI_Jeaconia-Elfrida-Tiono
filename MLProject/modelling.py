@@ -30,7 +30,9 @@ with mlflow.start_run() as run:
     print("Accuracy:", accuracy)
     print(classification_report(y_test, y_pred))
 
+    mlflow.log_metric("accuracy", accuracy)
     mlflow.sklearn.log_model(model, artifact_path="model")
+
 
 
 
