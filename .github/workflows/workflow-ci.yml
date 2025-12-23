@@ -2,7 +2,7 @@ name: workflow-ci
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
   workflow_dispatch:
 
 jobs:
@@ -21,9 +21,10 @@ jobs:
 
     - name: Run MLflow training
       working-directory: MLProject
+      env:
+        MLFLOW_TRACKING_URI: file:mlruns
       run: |
-        python modelling.py
-
+        python modelling.py | tee output.log
 
     - name: Get latest RUN_ID
       working-directory: MLProject
@@ -55,11 +56,14 @@ jobs:
         MLFLOW_TRACKING_URI: file:mlruns
       run: |
         echo "Using RUN_ID=$RUN_ID"
-        mlflow models build-docker -m "runs:/$RUN_ID/model" -n mlflow-model
+        mlflow models build-docker \
+          -m "runs:/$RUN_ID/model" \
+          -n mlflow-model
 
     - name: Tag Docker Image
       run: |
-        docker tag mlflow-model:latest ${{ secrets.DOCKER_USERNAME }}/mlflow-model:latest
+        docker tag mlflow-model:latest \
+          ${{ secrets.DOCKER_USERNAME }}/mlflow-model:latest
 
     - name: Push Docker Image
       run: |
