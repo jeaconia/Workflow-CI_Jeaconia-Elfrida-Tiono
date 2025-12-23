@@ -24,14 +24,15 @@ jobs:
       run: |
         python modelling.py
 
-    - name: Get latest MLflow run (global)
+    - name: Get latest MLflow run
       working-directory: MLProject
       env:
         MLFLOW_TRACKING_URI: file:mlruns
       run: |
-        mlflow runs list
+        mlflow runs list --experiment-id 0
     
         RUN_ID=$(mlflow runs list \
+          --experiment-id 0 \
           --order-by start_time DESC \
           --max-results 1 \
           | tail -n 1 | awk '{print $1}')
