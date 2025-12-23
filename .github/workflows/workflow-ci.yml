@@ -24,35 +24,20 @@ jobs:
       run: |
         python modelling.py
 
-    - name: Get experiment id
+    - name: Get latest MLflow run (global)
       working-directory: MLProject
       env:
         MLFLOW_TRACKING_URI: file:mlruns
       run: |
-        EXP_ID=$(mlflow experiments list \
-          | grep "Eksperimen Latih Model Dataset Abalone" \
-          | awk '{print $1}')
+        mlflow runs list
     
-        if [ -z "$EXP_ID" ]; then
-          echo "ERROR: Experiment ID not found"
-          exit 1
-        fi
-    
-        echo "EXPERIMENT_ID=$EXP_ID" >> $GITHUB_ENV
-    
-    - name: Get latest MLflow run
-      working-directory: MLProject
-      env:
-        MLFLOW_TRACKING_URI: file:mlruns
-      run: |
         RUN_ID=$(mlflow runs list \
-          --experiment-id $EXPERIMENT_ID \
           --order-by start_time DESC \
           --max-results 1 \
           | tail -n 1 | awk '{print $1}')
     
         if [ -z "$RUN_ID" ]; then
-          echo "ERROR: RUN_ID is empty"
+          echo "ERROR: RUN_ID not found"
           exit 1
         fi
     
