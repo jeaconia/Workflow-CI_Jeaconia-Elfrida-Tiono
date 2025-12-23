@@ -23,16 +23,30 @@ jobs:
       working-directory: MLProject
       run: |
         python modelling.py
+
+    - name: Get experiment id
+      working-directory: MLProject
+      env:
+        MLFLOW_TRACKING_URI: file:mlruns
+      run: |
+        EXP_ID=$(mlflow experiments list \
+          | grep "Eksperimen Latih Model Dataset Abalone" \
+          | awk '{print $1}')
+    
+        if [ -z "$EXP_ID" ]; then
+          echo "ERROR: Experiment ID not found"
+          exit 1
+        fi
+    
+        echo "EXPERIMENT_ID=$EXP_ID" >> $GITHUB_ENV
     
     - name: Get latest MLflow run
       working-directory: MLProject
       env:
         MLFLOW_TRACKING_URI: file:mlruns
       run: |
-        mlflow runs list --experiment-name "Eksperimen Latih Model Dataset Abalone"
-    
         RUN_ID=$(mlflow runs list \
-          --experiment-name "Eksperimen Latih Model Dataset Abalone" \
+          --experiment-id $EXPERIMENT_ID \
           --order-by start_time DESC \
           --max-results 1 \
           | tail -n 1 | awk '{print $1}')
@@ -42,11 +56,7 @@ jobs:
           exit 1
         fi
     
-        ARTIFACT_URI=$(mlflow runs describe -r $RUN_ID \
-          | grep Artifact | awk '{print $3}')
-    
         echo "RUN_ID=$RUN_ID" >> $GITHUB_ENV
-        echo "ARTIFACT_URI=$ARTIFACT_URI" >> $GITHUB_ENV
 
     - name: Debug artifacts
       run: |
