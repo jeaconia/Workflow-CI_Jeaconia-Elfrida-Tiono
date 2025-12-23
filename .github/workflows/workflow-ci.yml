@@ -31,11 +31,8 @@ jobs:
       run: |
         mlflow runs list --experiment-id 0
     
-        RUN_ID=$(mlflow runs list \
-          --experiment-id 0 \
-          --order-by start_time DESC \
-          --max-results 1 \
-          | tail -n 1 | awk '{print $1}')
+        RUN_ID=$(mlflow runs list --experiment-id 0 \
+          | awk 'NR==2 {print $1}')
     
         if [ -z "$RUN_ID" ]; then
           echo "ERROR: RUN_ID not found"
