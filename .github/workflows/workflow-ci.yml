@@ -1,4 +1,4 @@
-name: workflow-ci
+name: MLflow CI Retraining - Advanced
 
 on:
   push:
@@ -6,69 +6,59 @@ on:
   workflow_dispatch:
 
 jobs:
-  train:
+  train-and-docker:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
+      - name: Checkout Repo
+        uses: actions/checkout@v4
 
-    - uses: actions/setup-python@v5
-      with:
-        python-version: "3.10"
+      - name: Setup Miniconda
+        uses: conda-incubator/setup-miniconda@v3
+        with:
+          auto-update-conda: true
+          activate-environment: mlflow-env
+          environment-file: MLProject/conda.yaml
+          auto-activate-base: false
 
-    - name: Install MLflow
-      run: pip install mlflow
+      - name: Run MLflow Project (Training)
+        shell: bash -l {0}
+        run: |
+          cd MLProject
+          export MLFLOW_TRACKING_URI=file:${GITHUB_WORKSPACE}/MLProject/mlruns
+          mlflow run . --env-manager=local | tee output.log
 
-    - name: Run MLflow Project (Retrain)
-      working-directory: MLProject
-      env:
-        MLFLOW_TRACKING_URI: file:mlruns
-      run: |
-        mlflow run . | tee output.log
+      - name: Get latest RUN_ID
+        shell: bash -l {0}
+        run: |
+          cd MLProject
+          RUN_ID=$(ls -td mlruns/*/* | head -1 | xargs basename)
+          echo "RUN_ID=$RUN_ID" >> $GITHUB_ENV
+          echo "MODEL_PATH=runs:/$RUN_ID/model" >> $GITHUB_ENV
+          echo "Detected RUN_ID=$RUN_ID"
 
-    - name: Debug mlruns structure
-      working-directory: MLProject
-      run: |
-        tree mlruns -L 3 || find mlruns -maxdepth 3 -type d
+      - name: Upload MLflow Artifacts (Skilled)
+        uses: actions/upload-artifact@v4
+        with:
+          name: mlflow-artifacts
+          path: MLProject/mlruns
 
-    - name: Get latest RUN_ID
-      working-directory: MLProject
-      run: |
-        RUN_ID=$(ls -td mlruns/0/* | head -1 | xargs basename)
-    
-        if [ -z "$RUN_ID" ]; then
-          echo "ERROR: RUN_ID not found"
-          exit 1
-        fi
-    
-        echo "RUN_ID=$RUN_ID" >> $GITHUB_ENV
-        echo "Detected RUN_ID=$RUN_ID"
+      - name: Build Docker Image from MLflow Model
+        shell: bash -l {0}
+        run: |
+          cd MLProject
+          mlflow models build-docker \
+            -m "$MODEL_PATH" \
+            -n abalone-mlflow
 
-    - name: Upload MLflow artifacts
-      uses: actions/upload-artifact@v4
-      with:
-        name: mlflow-artifacts
-        path: MLProject/mlruns
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
 
-    - name: Docker Login
-      uses: docker/login-action@v2
-      with:
-        username: ${{ secrets.DOCKER_USERNAME }}
-        password: ${{ secrets.DOCKER_PASSWORD }}
-
-    - name: Build Docker Image from MLflow Model
-      working-directory: MLProject
-      env:
-        MLFLOW_TRACKING_URI: file:mlruns
-      run: |
-        mlflow models build-docker \
-          -m "runs:/$RUN_ID/model" \
-          -n mlflow-model
-
-    - name: Tag & Push Docker Image
-      run: |
-        docker tag mlflow-model:latest \
-          ${{ secrets.DOCKER_USERNAME }}/mlflow-model:latest
-        docker push ${{ secrets.DOCKER_USERNAME }}/mlflow-model:latest
-
-        
+      - name: Push Docker Image (Advanced)
+        run: |
+          docker tag abalone-mlflow:latest \
+            ${{ secrets.DOCKER_USERNAME }}/abalone-mlflow:latest
+          docker push ${{ secrets.DOCKER_USERNAME }}/abalone-mlflow:latest
