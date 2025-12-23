@@ -24,22 +24,19 @@ jobs:
       run: |
         python modelling.py
 
-    - name: Get latest MLflow run
+
+    - name: Get latest RUN_ID
       working-directory: MLProject
-      env:
-        MLFLOW_TRACKING_URI: file:mlruns
       run: |
-        mlflow runs list --experiment-id 0
-    
-        RUN_ID=$(mlflow runs list --experiment-id 0 \
-          | awk 'NR==2 {print $1}')
-    
+        RUN_ID=$(grep "MLFLOW_RUN_ID=" output.log | tail -1 | cut -d= -f2)
+
         if [ -z "$RUN_ID" ]; then
           echo "ERROR: RUN_ID not found"
           exit 1
         fi
-    
+
         echo "RUN_ID=$RUN_ID" >> $GITHUB_ENV
+        echo "Detected RUN_ID=$RUN_ID"
 
     - name: Debug artifacts
       run: |
