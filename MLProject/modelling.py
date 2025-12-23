@@ -1,38 +1,47 @@
 import mlflow
-import mlflow.pyfunc
+import mlflow.sklearn
 import pandas as pd
+
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score
 
 DATA_DIR = "Abalone_preprocessing"
 
-class SklearnModelWrapper(mlflow.pyfunc.PythonModel):
-    def __init__(self, model):
-        self.model = model
-
-    def predict(self, context, model_input):
-        return self.model.predict(model_input)
 
 def main():
-    X_train = pd.read_csv(f"{DATA_DIR}/X_train.csv")
-    X_test = pd.read_csv(f"{DATA_DIR}/X_test.csv")
-    y_train = pd.read_csv(f"{DATA_DIR}/y_train.csv").values.ravel()
-    y_test = pd.read_csv(f"{DATA_DIR}/y_test.csv").values.ravel()
+    mlflow.set_experiment("abalone-experiment")
 
-    model = RandomForestClassifier(
-        n_estimators=100,
-        random_state=42
-    )
-    model.fit(X_train, y_train)
+    with mlflow.start_run() as run:
+        print(f"MLFLOW_RUN_ID={run.info.run_id}")
 
-    mlflow.pyfunc.log_model(
-        artifact_path="model",
-        python_model=SklearnModelWrapper(model),
-        input_example=X_train.iloc[:5]
-    )
+        # Load data
+        X_train = pd.read_csv(f"{DATA_DIR}/X_train.csv")
+        X_test = pd.read_csv(f"{DATA_DIR}/X_test.csv")
+        y_train = pd.read_csv(f"{DATA_DIR}/y_train.csv").values.ravel()
+        y_test = pd.read_csv(f"{DATA_DIR}/y_test.csv").values.ravel()
 
-    y_pred = model.predict(X_test)
-    mlflow.log_metric("accuracy", accuracy_score(y_test, y_pred))
+        # Model
+        model = RandomForestClassifier(
+            n_estimators=100,
+            random_state=42
+        )
+
+        model.fit(X_train, y_train)
+
+        mlflow.sklearn.log_model(
+            sk_model=model,
+            artifact_path="model",
+            registered_model_name=None
+        )
+
+        # Evaluation
+        preds = model.predict(X_test)
+        acc = accuracy_score(y_test, preds)
+
+        mlflow.log_metric("accuracy", acc)
+
+        print(f"Training selesai | ACC={acc:.4f}")
+
 
 if __name__ == "__main__":
     main()
