@@ -26,16 +26,21 @@ jobs:
       run: |
         mlflow run . | tee output.log
 
+    - name: Debug mlruns structure
+      working-directory: MLProject
+      run: |
+        tree mlruns -L 3 || find mlruns -maxdepth 3 -type d
+
     - name: Get latest RUN_ID
       working-directory: MLProject
       run: |
-        RUN_ID=$(grep "MLFLOW_RUN_ID=" output.log | tail -1 | cut -d= -f2)
-
+        RUN_ID=$(ls -td mlruns/0/* | head -1 | xargs basename)
+    
         if [ -z "$RUN_ID" ]; then
           echo "ERROR: RUN_ID not found"
           exit 1
         fi
-
+    
         echo "RUN_ID=$RUN_ID" >> $GITHUB_ENV
         echo "Detected RUN_ID=$RUN_ID"
 
