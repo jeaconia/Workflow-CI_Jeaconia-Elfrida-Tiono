@@ -22,11 +22,19 @@ jobs:
     - name: Run MLflow training
       working-directory: MLProject
       run: |
-        OUTPUT=$(python modelling.py)
-        echo "$OUTPUT"
+        python modelling.py
     
-        RUN_ID=$(echo "$OUTPUT" | grep MLFLOW_RUN_ID | cut -d= -f2)
-        ARTIFACT_URI=$(echo "$OUTPUT" | grep MLFLOW_ARTIFACT_URI | cut -d= -f2)
+    - name: Get latest MLflow run
+      working-directory: MLProject
+      run: |
+        RUN_ID=$(mlflow runs list \
+          --experiment-name "Eksperimen Latih Model Dataset Abalone" \
+          --order-by start_time DESC \
+          --max-results 1 \
+          | tail -n 1 | awk '{print $1}')
+    
+        ARTIFACT_URI=$(mlflow runs describe -r $RUN_ID \
+          | grep Artifact | awk '{print $3}')
     
         echo "RUN_ID=$RUN_ID" >> $GITHUB_ENV
         echo "ARTIFACT_URI=$ARTIFACT_URI" >> $GITHUB_ENV
