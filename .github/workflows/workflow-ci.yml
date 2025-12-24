@@ -1,4 +1,4 @@
-name: MLflow CI Retraining - Advanced
+name: MLflow CI Retraining
 
 on:
   push:
@@ -32,12 +32,20 @@ jobs:
         shell: bash -l {0}
         run: |
           cd MLProject
-          RUN_ID=$(find mlruns -type d -path "*/artifacts/model" | head -1 | awk -F'/' '{print $(NF-2)}')
+          RUN_ID=$(find mlruns -type d -path "*/artifacts/model" \
+            | sort -r \
+            | head -1 \
+            | awk -F'/' '{print $(NF-2)}')
+      
+          if [ -z "$RUN_ID" ]; then
+            echo "ERROR: RUN_ID not found"
+            exit 1
+          fi
+      
           echo "RUN_ID=$RUN_ID" >> $GITHUB_ENV
-          echo "MODEL_PATH=runs:/$RUN_ID/model" >> $GITHUB_ENV
           echo "Detected RUN_ID=$RUN_ID"
 
-      - name: Upload MLflow Artifacts (Skilled)
+      - name: Upload MLflow Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: mlflow-artifacts
@@ -57,7 +65,7 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Push Docker Image (Advanced)
+      - name: Push Docker Image
         run: |
           docker tag abalone-mlflow:latest \
             ${{ secrets.DOCKER_USERNAME }}/abalone-mlflow:latest
