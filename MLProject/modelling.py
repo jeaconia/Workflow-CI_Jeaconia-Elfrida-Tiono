@@ -8,7 +8,6 @@ DATA_DIR = "Abalone_preprocessing"
 
 def main():
     with mlflow.start_run() as run:
-        # Save Run ID for GitHub Actions to read later
         with open("run_id.txt", "w") as f:
             f.write(run.info.run_id)
 
@@ -25,9 +24,7 @@ def main():
         preds = model.predict(X_test)
         acc = accuracy_score(y_test, preds)
         mlflow.log_metric("accuracy", acc)
-        
-        # Performance Gate: Print for GitHub Actions to capture
-        print(f"FINAL_ACCURACY={acc}")
+        print(f"Training complete. Accuracy: {acc}")
 
 if __name__ == "__main__":
     main()
