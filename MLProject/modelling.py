@@ -11,7 +11,6 @@ DATA_DIR = "Abalone_preprocessing"
 def main():
     mlflow.set_experiment("abalone-experiment")
 
-    with mlflow.start_run() as run:
         print(f"MLFLOW_RUN_ID={run.info.run_id}")
 
         # Load data
@@ -45,3 +44,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
