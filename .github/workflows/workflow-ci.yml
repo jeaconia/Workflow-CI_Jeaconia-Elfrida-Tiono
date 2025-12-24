@@ -25,13 +25,17 @@ jobs:
         shell: bash -l {0}
         run: |
           cd MLProject
-          export MLFLOW_TRACKING_URI=file:${GITHUB_WORKSPACE}/MLProject/mlruns
+          export MLFLOW_TRACKING_URI=file:${GITHUB_WORKSPACE}/mlruns
           mlflow run . --env-manager=local | tee output.log
+
+      - name: Debug mlruns
+        run: |
+          tree mlruns -L 4 || find mlruns -maxdepth 4 -type d
 
       - name: Get RUN_ID with model
         shell: bash -l {0}
         run: |
-          cd MLProject
+          cd ${GITHUB_WORKSPACE}
           RUN_ID=$(find mlruns -type d -path "*/artifacts/model" \
             | sort -r \
             | head -1 \
@@ -49,12 +53,11 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: mlflow-artifacts
-          path: MLProject/mlruns
+          path: mlruns
 
       - name: Build Docker Image from MLflow Model
         shell: bash -l {0}
         run: |
-          cd MLProject
           mlflow models build-docker \
             -m "runs:/$RUN_ID/model" \
             -n abalone-mlflow
