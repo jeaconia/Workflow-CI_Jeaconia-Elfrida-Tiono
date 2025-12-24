@@ -32,22 +32,14 @@ jobs:
         run: |
           tree mlruns -L 4 || find mlruns -maxdepth 4 -type d
 
-      - name: Get RUN_ID with model
+      - name: Get latest MLflow Model URI
         shell: bash -l {0}
         run: |
-          cd ${GITHUB_WORKSPACE}
-          RUN_ID=$(find mlruns -type d -path "*/artifacts/model" \
-            | sort -r \
-            | head -1 \
-            | awk -F'/' '{print $(NF-2)}')
+          MODEL_URI=$(ls -td mlruns/models/* | head -1)
+          MODEL_NAME=$(basename $MODEL_URI)
       
-          if [ -z "$RUN_ID" ]; then
-            echo "ERROR: RUN_ID not found"
-            exit 1
-          fi
-      
-          echo "RUN_ID=$RUN_ID" >> $GITHUB_ENV
-          echo "Detected RUN_ID=$RUN_ID"
+          echo "MODEL_URI=models:/$MODEL_NAME" >> $GITHUB_ENV
+          echo "Detected MODEL_URI=models:/$MODEL_NAME"
 
       - name: Upload MLflow Artifacts
         uses: actions/upload-artifact@v4
@@ -59,7 +51,7 @@ jobs:
         shell: bash -l {0}
         run: |
           mlflow models build-docker \
-            -m "runs:/$RUN_ID/model" \
+            -m "$MODEL_URI" \
             -n abalone-mlflow
 
       - name: Login to Docker Hub
