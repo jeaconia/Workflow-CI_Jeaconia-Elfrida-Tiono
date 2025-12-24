@@ -36,6 +36,13 @@ jobs:
           echo "MODEL_PATH=runs:/$RUN_ID/model" >> $GITHUB_ENV
           echo "Proceeding with Run ID: $RUN_ID"
 
+      - name: Upload MLflow Artifacts (Skilled)
+              uses: actions/upload-artifact@v4
+              with:
+                name: mlflow-artifacts
+                path: MLProject/mlruns
+                retention-days: 5
+
       - name: Build Docker Image
         shell: bash -l {0}
         run: |
