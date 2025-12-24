@@ -20,44 +20,44 @@ jobs:
           activate-environment: mlflow-env
           environment-file: MLProject/conda.yaml
           auto-activate-base: false
-      
+
       - name: Run MLflow Project (Training)
         shell: bash -l {0}
         run: |
           cd MLProject
-          export MLFLOW_TRACKING_URI=file:${GITHUB_WORKSPACE}/mlruns
-          mlflow run . --env-manager=local | tee output.log
+          export MLFLOW_TRACKING_URI=file:${GITHUB_WORKSPACE}/MLProject/mlruns
+          # Run training and capture the accuracy from the output
+          mlflow run . --env-manager=local | tee training_output.log
+          
+          # Extract accuracy and check if it meets threshold (0.8)
+          ACC=$(grep "FINAL_ACCURACY=" training_output.log | cut -d'=' -f2)
+          echo "MODEL_ACCURACY=$ACC" >> $GITHUB_ENV
 
-      - name: Debug mlruns
+      - name: Evaluate Model Gate
         run: |
-          tree mlruns -L 4 || find mlruns -maxdepth 4 -type d
+          echo "Accuracy is ${{ env.MODEL_ACCURACY }}"
+          # Basic bash comparison: 0.8 threshold
+          if (( $(echo "${{ env.MODEL_ACCURACY }} < 0.8" | bc -l) )); then
+            echo "Model accuracy too low. Stopping pipeline."
+            exit 1
+          fi
 
-      - name: Get latest MLflow Model URI
-        shell: bash -l {0}
+      - name: Get RUN_ID
         run: |
-          cd MLProject
-      
-          MODEL_DIR=$(ls -td mlruns/0/models/* | head -1)
-          MODEL_NAME=$(basename $MODEL_DIR)
-      
-          echo "MODEL_URI=models:/$MODEL_NAME" >> $GITHUB_ENV
-          echo "Detected MODEL_URI=models:/$MODEL_NAME"
+          # Read the ID saved by the Python script
+          RUN_ID=$(cat MLProject/run_id.txt)
+          echo "RUN_ID=$RUN_ID" >> $GITHUB_ENV
+          echo "MODEL_PATH=runs:/$RUN_ID/model" >> $GITHUB_ENV
 
-      - name: Upload MLflow Artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: mlflow-artifacts
-          path: mlruns
-
-      - name: Build Docker Image from MLflow Model
+      - name: Build Docker Image
         shell: bash -l {0}
         run: |
           cd MLProject
           mlflow models build-docker \
-            -m "$MODEL_URI" \
+            -m "$MODEL_PATH" \
             -n abalone-mlflow
 
-      - name: Login to Docker Hub
+      - name: Login and Push to Docker Hub
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
@@ -65,6 +65,5 @@ jobs:
 
       - name: Push Docker Image
         run: |
-          docker tag abalone-mlflow:latest \
-            ${{ secrets.DOCKER_USERNAME }}/abalone-mlflow:latest
+          docker tag abalone-mlflow:latest ${{ secrets.DOCKER_USERNAME }}/abalone-mlflow:latest
           docker push ${{ secrets.DOCKER_USERNAME }}/abalone-mlflow:latest
