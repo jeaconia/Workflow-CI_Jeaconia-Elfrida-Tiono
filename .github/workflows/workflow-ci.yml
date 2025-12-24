@@ -28,11 +28,11 @@ jobs:
           export MLFLOW_TRACKING_URI=file:${GITHUB_WORKSPACE}/MLProject/mlruns
           mlflow run . --env-manager=local | tee output.log
 
-      - name: Get latest RUN_ID
+      - name: Get RUN_ID with model
         shell: bash -l {0}
         run: |
           cd MLProject
-          RUN_ID=$(ls -td mlruns/*/* | head -1 | xargs basename)
+          RUN_ID=$(find mlruns -type d -path "*/artifacts/model" | head -1 | awk -F'/' '{print $(NF-2)}')
           echo "RUN_ID=$RUN_ID" >> $GITHUB_ENV
           echo "MODEL_PATH=runs:/$RUN_ID/model" >> $GITHUB_ENV
           echo "Detected RUN_ID=$RUN_ID"
