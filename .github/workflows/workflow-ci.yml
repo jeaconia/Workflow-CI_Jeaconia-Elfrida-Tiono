@@ -35,8 +35,10 @@ jobs:
       - name: Get latest MLflow Model URI
         shell: bash -l {0}
         run: |
-          MODEL_URI=$(ls -td mlruns/models/* | head -1)
-          MODEL_NAME=$(basename $MODEL_URI)
+          cd MLProject
+      
+          MODEL_DIR=$(ls -td mlruns/0/models/* | head -1)
+          MODEL_NAME=$(basename $MODEL_DIR)
       
           echo "MODEL_URI=models:/$MODEL_NAME" >> $GITHUB_ENV
           echo "Detected MODEL_URI=models:/$MODEL_NAME"
@@ -50,6 +52,7 @@ jobs:
       - name: Build Docker Image from MLflow Model
         shell: bash -l {0}
         run: |
+          cd MLProject
           mlflow models build-docker \
             -m "$MODEL_URI" \
             -n abalone-mlflow
